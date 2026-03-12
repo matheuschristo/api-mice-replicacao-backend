@@ -1,4 +1,4 @@
-package br.com.api.mice.replicacao.entities;
+package br.com.api.mice.replicacao.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
@@ -24,12 +24,12 @@ public abstract class BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "source_id", nullable = false, unique = true, length = 100)
-    private String sourceId;
+    @Column(name = "source_id", nullable = false, unique = true)
+    private Long sourceId;
 
-    @Column(name = "origem_updated_at")
+    @Column(name = "origem_updated_at", nullable = false)
     private LocalDateTime origemUpdatedAt;
 
-    @Column(name = "replicated_at")
+    @Column(name = "replicated_at", nullable = false)
     private LocalDateTime replicatedAt;
 }

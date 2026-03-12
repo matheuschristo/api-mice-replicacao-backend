@@ -8,11 +8,11 @@
 		<version>4.0.3</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>br.com.api.mace</groupId>
-	<artifactId>api-mace-replicacao-backend</artifactId>
+	<groupId>br.com.api.mice</groupId>
+	<artifactId>api-mice-replicacao-backend</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>api-mace-replicacao-backend</name>
-	<description>br.com.api.mace.replicacao.backend</description>
+	<name>api-mice-replicacao-backend</name>
+	<description>br.com.api.mice.replicacao.backend</description>
 	<url/>
 	<licenses>
 		<license/>
@@ -36,7 +36,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-webmvc</artifactId>
+			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 
 		<dependency>
@@ -50,13 +50,13 @@
 			<optional>true</optional>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-jpa-test</artifactId>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-webmvc-test</artifactId>
+			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

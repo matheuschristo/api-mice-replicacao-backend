@@ -1,4 +1,4 @@
-package br.com.api.mice.replicacao.entities;
+package br.com.api.mice.replicacao.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -18,18 +18,22 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString(callSuper = true, exclude = {"empresa", "cidade"})
 @Entity
-@Table(name = "estado")
-public class EstadoEntity extends BaseEntity {
+@Table(name = "filial_rep")
+public class FilialEntity extends BaseEntity {
 
-    @Column(nullable = false, length = 120)
+    @Column(nullable = false)
     private String nome;
 
-    @Column(nullable = false, length = 5)
-    private String uf;
+    @Column(length = 50)
+    private String codigo;
 
-    @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "pais_id", nullable = false)
-    private PaisEntity pais;
+    @JoinColumn(name = "empresa_id", nullable = false)
+    private EmpresaEntity empresa;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "cidade_id", nullable = false)
+    private CidadeEntity cidade;
 }

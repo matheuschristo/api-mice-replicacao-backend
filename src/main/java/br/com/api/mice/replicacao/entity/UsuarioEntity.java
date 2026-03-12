@@ -1,4 +1,4 @@
-package br.com.api.mice.replicacao.entities;
+package br.com.api.mice.replicacao.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -18,22 +18,24 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString(callSuper = true, exclude = {"empresa", "filial"})
 @Entity
-@Table(name = "usuario")
+@Table(name = "usuario_rep")
 public class UsuarioEntity extends BaseEntity {
 
-    @Column(nullable = false, length = 150)
+    @Column(nullable = false)
     private String nome;
 
-    @Column(nullable = false, length = 150, unique = true)
+    @Column(nullable = false, unique = true)
     private String email;
 
-    @ToString.Exclude
+    @Column(nullable = false)
+    private Boolean ativo;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "empresa_id", nullable = false)
     private EmpresaEntity empresa;
 
-    @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "filial_id", nullable = false)
     private FilialEntity filial;

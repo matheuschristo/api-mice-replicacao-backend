@@ -1,4 +1,4 @@
-package br.com.api.mice.replicacao.entities;
+package br.com.api.mice.replicacao.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
 @Getter
@@ -14,13 +15,14 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString(callSuper = true)
 @Entity
-@Table(name = "pais")
+@Table(name = "pais_rep")
 public class PaisEntity extends BaseEntity {
 
-    @Column(nullable = false, length = 120)
+    @Column(nullable = false)
     private String nome;
 
-    @Column(nullable = false, length = 10)
+    @Column(length = 10)
     private String sigla;
 }
