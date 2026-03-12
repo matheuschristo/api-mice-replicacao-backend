@@ -1,4 +1,4 @@
-package br.com.api.mace.replicacao.entities;
+package br.com.api.mice.replicacao.entities;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -19,8 +19,8 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "estado_rep")
-public class EstadoRepEntity extends BaseEntity {
+@Table(name = "estado")
+public class EstadoEntity extends BaseEntity {
 
     @Column(nullable = false, length = 120)
     private String nome;
@@ -31,5 +31,5 @@ public class EstadoRepEntity extends BaseEntity {
     @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "pais_id", nullable = false)
-    private PaisRepEntity pais;
+    private PaisEntity pais;
 }

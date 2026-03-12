@@ -1,4 +1,4 @@
-package br.com.api.mace.replicacao;
+package br.com.api.mice.replicacao;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

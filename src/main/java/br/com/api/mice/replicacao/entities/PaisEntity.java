@@ -1,4 +1,4 @@
-package br.com.api.mace.replicacao.entities;
+package br.com.api.mice.replicacao.entities;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -15,8 +15,8 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "pais_rep")
-public class PaisRepEntity extends BaseEntity {
+@Table(name = "pais")
+public class PaisEntity extends BaseEntity {
 
     @Column(nullable = false, length = 120)
     private String nome;

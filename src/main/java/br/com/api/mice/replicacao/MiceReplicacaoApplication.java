@@ -1,13 +1,13 @@
-package br.com.api.mace.replicacao;
+package br.com.api.mice.replicacao;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class MaceReplicacaoApplication {
+public class MiceReplicacaoApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(MaceReplicacaoApplication.class, args);
+		SpringApplication.run(MiceReplicacaoApplication.class, args);
 	}
 
 }

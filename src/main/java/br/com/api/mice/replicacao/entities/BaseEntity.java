@@ -1,4 +1,4 @@
-package br.com.api.mace.replicacao.entities;
+package br.com.api.mice.replicacao.entities;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
