@@ -1,14 +1,13 @@
 package br.com.api.mice.replicacao.service.replicacao;
 
-import br.com.api.mice.replicacao.client.DjangoApiClient;
-import br.com.api.mice.replicacao.dto.EmpresaDjangoDTO;
+import br.com.api.mice.replicacao.dto.EventoReplicacaoDTO;
 import br.com.api.mice.replicacao.entity.CidadeEntity;
 import br.com.api.mice.replicacao.entity.EmpresaEntity;
-import br.com.api.mice.replicacao.entity.enums.ReplicacaoStatus;
+import br.com.api.mice.replicacao.entity.enums.TipoAcaoReplicacao;
 import br.com.api.mice.replicacao.repository.CidadeRepRepository;
 import br.com.api.mice.replicacao.repository.EmpresaRepRepository;
-import br.com.api.mice.replicacao.service.ReplicacaoLogService;
 import java.time.LocalDateTime;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,31 +16,39 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class EmpresaReplicacaoService {
 
-    private final DjangoApiClient djangoApiClient;
     private final EmpresaRepRepository empresaRepRepository;
     private final CidadeRepRepository cidadeRepRepository;
-    private final ReplicacaoLogService replicacaoLogService;
 
     @Transactional
-    public int replicar() {
-        int processados = 0;
-        for (EmpresaDjangoDTO dto : djangoApiClient.buscarEmpresas()) {
-            CidadeEntity cidade = cidadeRepRepository.findBySourceId(dto.getCidadeId())
-                .orElseThrow(() -> new IllegalStateException("Cidade nao encontrada para sourceId " + dto.getCidadeId()));
-
-            EmpresaEntity entity = empresaRepRepository.findBySourceId(dto.getId())
-                .orElseGet(EmpresaEntity::new);
-            entity.setSourceId(dto.getId());
-            entity.setRazaoSocial(dto.getRazaoSocial());
-            entity.setNomeFantasia(dto.getNomeFantasia());
-            entity.setCnpj(dto.getCnpj());
-            entity.setCidade(cidade);
-            entity.setOrigemUpdatedAt(dto.getUpdatedAt() != null ? dto.getUpdatedAt() : LocalDateTime.now());
-            entity.setReplicatedAt(LocalDateTime.now());
-            empresaRepRepository.save(entity);
-            processados++;
+    public void processarEvento(EventoReplicacaoDTO evento) {
+        TipoAcaoReplicacao acao = evento.getAction();
+        switch (acao) {
+            case CREATE, UPDATE -> salvarOuAtualizar(evento);
+            case DELETE -> deletar(evento);
         }
-        replicacaoLogService.registrar("Empresa", ReplicacaoStatus.SUCCESS, processados, "Replicacao de empresas concluida.");
-        return processados;
+    }
+
+    private void salvarOuAtualizar(EventoReplicacaoDTO evento) {
+        Long sourceId = EventoReplicacaoHelper.sourceId(evento);
+        Map<String, Object> data = evento.getData();
+        Long cidadeSourceId = EventoReplicacaoHelper.getLong(data, "cidadeSourceId", "cidadeId");
+        CidadeEntity cidade = cidadeRepRepository.findBySourceId(cidadeSourceId)
+            .orElseThrow(() -> new IllegalStateException("Cidade nao encontrada para sourceId " + cidadeSourceId));
+
+        EmpresaEntity entity = empresaRepRepository.findBySourceId(sourceId)
+            .orElseGet(EmpresaEntity::new);
+        entity.setSourceId(sourceId);
+        entity.setRazaoSocial(EventoReplicacaoHelper.getString(data, "razaoSocial", "nome"));
+        entity.setNomeFantasia(EventoReplicacaoHelper.getString(data, "nomeFantasia"));
+        entity.setCnpj(EventoReplicacaoHelper.getString(data, "cnpj"));
+        entity.setCidade(cidade);
+        entity.setOrigemUpdatedAt(EventoReplicacaoHelper.updatedAt(evento));
+        entity.setReplicatedAt(LocalDateTime.now());
+        empresaRepRepository.save(entity);
+    }
+
+    private void deletar(EventoReplicacaoDTO evento) {
+        empresaRepRepository.findBySourceId(EventoReplicacaoHelper.sourceId(evento))
+            .ifPresent(empresaRepRepository::delete);
     }
 }

@@ -11,9 +11,4 @@ public class RestClientConfig {
     public RestClient.Builder restClientBuilder() {
         return RestClient.builder();
     }
-
-    @Bean
-    public RestClient djangoRestClient(RestClient.Builder builder, DjangoApiProperties properties) {
-        return builder.baseUrl(properties.getBaseUrl()).build();
-    }
 }

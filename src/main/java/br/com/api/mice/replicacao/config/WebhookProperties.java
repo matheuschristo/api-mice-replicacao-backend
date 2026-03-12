@@ -6,8 +6,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @Getter
 @Setter
-@ConfigurationProperties(prefix = "replicacao")
-public class ReplicacaoProperties {
+@ConfigurationProperties(prefix = "webhook")
+public class WebhookProperties {
 
-    private Long intervalMs = 60000L;
+    private Boolean enabled = Boolean.TRUE;
+    private String securityToken;
 }
