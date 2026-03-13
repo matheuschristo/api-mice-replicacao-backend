@@ -1,12 +1,11 @@
 package br.com.api.mice.replicacao.service.replicacao;
 
-import br.com.api.mice.replicacao.client.DjangoApiClient;
-import br.com.api.mice.replicacao.dto.PaisDjangoDTO;
+import br.com.api.mice.replicacao.dto.EventoReplicacaoDTO;
 import br.com.api.mice.replicacao.entity.PaisEntity;
-import br.com.api.mice.replicacao.entity.enums.ReplicacaoStatus;
+import br.com.api.mice.replicacao.entity.enums.TipoAcaoReplicacao;
 import br.com.api.mice.replicacao.repository.PaisRepRepository;
-import br.com.api.mice.replicacao.service.ReplicacaoLogService;
 import java.time.LocalDateTime;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,25 +14,34 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class PaisReplicacaoService {
 
-    private final DjangoApiClient djangoApiClient;
     private final PaisRepRepository paisRepRepository;
-    private final ReplicacaoLogService replicacaoLogService;
 
     @Transactional
-    public int replicar() {
-        int processados = 0;
-        for (PaisDjangoDTO dto : djangoApiClient.buscarPaises()) {
-            PaisEntity entity = paisRepRepository.findBySourceId(dto.getId())
-                .orElseGet(PaisEntity::new);
-            entity.setSourceId(dto.getId());
-            entity.setNome(dto.getNome());
-            entity.setSigla(dto.getSigla());
-            entity.setOrigemUpdatedAt(dto.getUpdatedAt() != null ? dto.getUpdatedAt() : LocalDateTime.now());
-            entity.setReplicatedAt(LocalDateTime.now());
-            paisRepRepository.save(entity);
-            processados++;
+    public void processarEvento(EventoReplicacaoDTO evento) {
+        TipoAcaoReplicacao acao = evento.getAction();
+        switch (acao) {
+            case CREATE, UPDATE -> salvarOuAtualizar(evento);
+            case DELETE -> deletar(evento);
         }
-        replicacaoLogService.registrar("Pais", ReplicacaoStatus.SUCCESS, processados, "Replicacao de paises concluida.");
-        return processados;
+    }
+
+    private void salvarOuAtualizar(EventoReplicacaoDTO evento) {
+        Long sourceId = EventoReplicacaoHelper.sourceId(evento);
+        Map<String, Object> data = evento.getData();
+
+        PaisEntity entity = paisRepRepository.findBySourceId(sourceId)
+            .orElseGet(PaisEntity::new);
+        entity.setSourceId(sourceId);
+        entity.setNome(EventoReplicacaoHelper.getString(data, "nome"));
+        entity.setSigla(EventoReplicacaoHelper.getString(data, "sigla"));
+        entity.setOrigemUpdatedAt(EventoReplicacaoHelper.updatedAt(evento));
+        entity.setReplicatedAt(LocalDateTime.now());
+        paisRepRepository.save(entity);
+    }
+
+    private void deletar(EventoReplicacaoDTO evento) {
+        // A estrategia inicial de delete da replica eh remocao fisica.
+        paisRepRepository.findBySourceId(EventoReplicacaoHelper.sourceId(evento))
+            .ifPresent(paisRepRepository::delete);
     }
 }

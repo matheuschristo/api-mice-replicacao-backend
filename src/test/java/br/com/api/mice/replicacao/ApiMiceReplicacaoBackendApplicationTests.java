@@ -9,10 +9,10 @@ import org.springframework.boot.test.context.SpringBootTest;
     "spring.datasource.password=",
     "spring.jpa.hibernate.ddl-auto=create-drop",
     "app.scheduling.enabled=false",
+    "webhook.enabled=true",
     "node.id=test-node",
     "node.host=localhost",
-    "node.porta=18080",
-    "django.api.base-url=http://localhost:8000/api"
+    "node.porta=18080"
 })
 class ApiMiceReplicacaoBackendApplicationTests {
 

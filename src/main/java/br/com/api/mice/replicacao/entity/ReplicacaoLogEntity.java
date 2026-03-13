@@ -34,6 +34,12 @@ public class ReplicacaoLogEntity {
     @Column(nullable = false)
     private String entidade;
 
+    @Column(name = "event_id", length = 100)
+    private String eventId;
+
+    @Column(name = "node_id", nullable = false, length = 100)
+    private String nodeId;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private ReplicacaoStatus status;
@@ -46,4 +52,7 @@ public class ReplicacaoLogEntity {
 
     @Column(name = "executado_em", nullable = false)
     private LocalDateTime executadoEm;
+
+    @Column(name = "finalizado_em")
+    private LocalDateTime finalizadoEm;
 }
