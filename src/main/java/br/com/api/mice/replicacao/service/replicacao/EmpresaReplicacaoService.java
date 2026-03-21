@@ -1,5 +1,6 @@
 package br.com.api.mice.replicacao.service.replicacao;
 
+import br.com.api.mice.replicacao.converter.EmpresaConverter;
 import br.com.api.mice.replicacao.dto.EventoReplicacaoDTO;
 import br.com.api.mice.replicacao.entity.CidadeEntity;
 import br.com.api.mice.replicacao.entity.EmpresaEntity;
@@ -31,16 +32,14 @@ public class EmpresaReplicacaoService {
     private void salvarOuAtualizar(EventoReplicacaoDTO evento) {
         Long sourceId = EventoReplicacaoHelper.sourceId(evento);
         Map<String, Object> data = evento.getData();
-        Long cidadeSourceId = EventoReplicacaoHelper.getLong(data, "cidadeSourceId", "cidadeId");
+        Long cidadeSourceId = EventoReplicacaoHelper.getLong(data, "cidadeSourceId", "cidadeId", "city");
         CidadeEntity cidade = cidadeRepRepository.findBySourceId(cidadeSourceId)
             .orElseThrow(() -> new IllegalStateException("Cidade nao encontrada para sourceId " + cidadeSourceId));
 
         EmpresaEntity entity = empresaRepRepository.findBySourceId(sourceId)
             .orElseGet(EmpresaEntity::new);
         entity.setSourceId(sourceId);
-        entity.setRazaoSocial(EventoReplicacaoHelper.getString(data, "razaoSocial", "nome"));
-        entity.setNomeFantasia(EventoReplicacaoHelper.getString(data, "nomeFantasia"));
-        entity.setCnpj(EventoReplicacaoHelper.getString(data, "cnpj"));
+        EmpresaConverter.apply(data, entity);
         entity.setCidade(cidade);
         entity.setOrigemUpdatedAt(EventoReplicacaoHelper.updatedAt(evento));
         entity.setReplicatedAt(LocalDateTime.now());

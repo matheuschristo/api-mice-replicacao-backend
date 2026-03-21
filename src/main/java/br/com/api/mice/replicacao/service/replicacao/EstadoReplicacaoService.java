@@ -1,5 +1,6 @@
 package br.com.api.mice.replicacao.service.replicacao;
 
+import br.com.api.mice.replicacao.converter.EstadoConverter;
 import br.com.api.mice.replicacao.dto.EventoReplicacaoDTO;
 import br.com.api.mice.replicacao.entity.EstadoEntity;
 import br.com.api.mice.replicacao.entity.PaisEntity;
@@ -31,15 +32,14 @@ public class EstadoReplicacaoService {
     private void salvarOuAtualizar(EventoReplicacaoDTO evento) {
         Long sourceId = EventoReplicacaoHelper.sourceId(evento);
         Map<String, Object> data = evento.getData();
-        Long paisSourceId = EventoReplicacaoHelper.getLong(data, "paisSourceId", "paisId");
+        Long paisSourceId = EventoReplicacaoHelper.getLong(data, "paisSourceId", "paisId", "country");
         PaisEntity pais = paisRepRepository.findBySourceId(paisSourceId)
             .orElseThrow(() -> new IllegalStateException("Pais nao encontrado para sourceId " + paisSourceId));
 
         EstadoEntity entity = estadoRepRepository.findBySourceId(sourceId)
             .orElseGet(EstadoEntity::new);
         entity.setSourceId(sourceId);
-        entity.setNome(EventoReplicacaoHelper.getString(data, "nome"));
-        entity.setSigla(EventoReplicacaoHelper.getString(data, "sigla"));
+        EstadoConverter.apply(data, entity);
         entity.setPais(pais);
         entity.setOrigemUpdatedAt(EventoReplicacaoHelper.updatedAt(evento));
         entity.setReplicatedAt(LocalDateTime.now());

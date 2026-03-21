@@ -1,5 +1,6 @@
 package br.com.api.mice.replicacao.service.replicacao;
 
+import br.com.api.mice.replicacao.converter.FilialConverter;
 import br.com.api.mice.replicacao.dto.EventoReplicacaoDTO;
 import br.com.api.mice.replicacao.entity.CidadeEntity;
 import br.com.api.mice.replicacao.entity.EmpresaEntity;
@@ -34,8 +35,8 @@ public class FilialReplicacaoService {
     private void salvarOuAtualizar(EventoReplicacaoDTO evento) {
         Long sourceId = EventoReplicacaoHelper.sourceId(evento);
         Map<String, Object> data = evento.getData();
-        Long empresaSourceId = EventoReplicacaoHelper.getLong(data, "empresaSourceId", "empresaId");
-        Long cidadeSourceId = EventoReplicacaoHelper.getLong(data, "cidadeSourceId", "cidadeId");
+        Long empresaSourceId = EventoReplicacaoHelper.getLong(data, "empresaSourceId", "empresaId", "company");
+        Long cidadeSourceId = EventoReplicacaoHelper.getLong(data, "cidadeSourceId", "cidadeId", "city");
         EmpresaEntity empresa = empresaRepRepository.findBySourceId(empresaSourceId)
             .orElseThrow(() -> new IllegalStateException("Empresa nao encontrada para sourceId " + empresaSourceId));
         CidadeEntity cidade = cidadeRepRepository.findBySourceId(cidadeSourceId)
@@ -44,8 +45,7 @@ public class FilialReplicacaoService {
         FilialEntity entity = filialRepRepository.findBySourceId(sourceId)
             .orElseGet(FilialEntity::new);
         entity.setSourceId(sourceId);
-        entity.setNome(EventoReplicacaoHelper.getString(data, "nome"));
-        entity.setCodigo(EventoReplicacaoHelper.getString(data, "codigo"));
+        FilialConverter.apply(data, entity);
         entity.setEmpresa(empresa);
         entity.setCidade(cidade);
         entity.setOrigemUpdatedAt(EventoReplicacaoHelper.updatedAt(evento));

@@ -36,7 +36,7 @@ public class HeartbeatService {
 
         for (NodeEntity node : nodeRegistryService.listarNosAtivos()) {
             if (node.getNodeId().equals(nodeProperties.getId())) {
-                continue;
+                continue;   
             }
             try {
                 restClientBuilder.baseUrl("http://" + node.getHost() + ":" + node.getPorta())
@@ -48,6 +48,7 @@ public class HeartbeatService {
                     .toBodilessEntity();
             } catch (Exception exception) {
                 log.warn("Falha ao enviar heartbeat para node {}: {}", node.getNodeId(), exception.getMessage());
+                nodeRegistryService.marcarComoSuspeito(node.getNodeId());
             }
         }
     }

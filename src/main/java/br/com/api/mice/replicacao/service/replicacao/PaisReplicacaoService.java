@@ -1,5 +1,6 @@
 package br.com.api.mice.replicacao.service.replicacao;
 
+import br.com.api.mice.replicacao.converter.PaisConverter;
 import br.com.api.mice.replicacao.dto.EventoReplicacaoDTO;
 import br.com.api.mice.replicacao.entity.PaisEntity;
 import br.com.api.mice.replicacao.entity.enums.TipoAcaoReplicacao;
@@ -32,15 +33,13 @@ public class PaisReplicacaoService {
         PaisEntity entity = paisRepRepository.findBySourceId(sourceId)
             .orElseGet(PaisEntity::new);
         entity.setSourceId(sourceId);
-        entity.setNome(EventoReplicacaoHelper.getString(data, "nome"));
-        entity.setSigla(EventoReplicacaoHelper.getString(data, "sigla"));
+        PaisConverter.apply(data, entity);
         entity.setOrigemUpdatedAt(EventoReplicacaoHelper.updatedAt(evento));
         entity.setReplicatedAt(LocalDateTime.now());
         paisRepRepository.save(entity);
     }
 
     private void deletar(EventoReplicacaoDTO evento) {
-        // A estrategia inicial de delete da replica eh remocao fisica.
         paisRepRepository.findBySourceId(EventoReplicacaoHelper.sourceId(evento))
             .ifPresent(paisRepRepository::delete);
     }
