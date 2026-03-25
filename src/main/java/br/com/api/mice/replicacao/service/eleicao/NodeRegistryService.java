@@ -1,12 +1,15 @@
 package br.com.api.mice.replicacao.service.eleicao;
 
+import br.com.api.mice.replicacao.config.HeartbeatProperties;
 import br.com.api.mice.replicacao.config.NodeProperties;
 import br.com.api.mice.replicacao.dto.NodeInfoDTO;
 import br.com.api.mice.replicacao.entity.NodeEntity;
 import br.com.api.mice.replicacao.entity.enums.NodeStatus;
 import br.com.api.mice.replicacao.repository.NodeRepository;
 import jakarta.annotation.PostConstruct;
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.EnumSet;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,8 +19,11 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class NodeRegistryService {
 
+    private static final long INACTIVE_TIMEOUT_MULTIPLIER = 3L;
+
     private final NodeRepository nodeRepository;
     private final NodeProperties nodeProperties;
+    private final HeartbeatProperties heartbeatProperties;
 
     @PostConstruct
     @Transactional
@@ -50,6 +56,16 @@ public class NodeRegistryService {
     }
 
     @Transactional(readOnly = true)
+    public List<NodeEntity> listarNosDisponiveisParaContato() {
+        return nodeRepository.findByStatusIn(List.copyOf(EnumSet.of(NodeStatus.ACTIVE, NodeStatus.SUSPECT)));
+    }
+
+    @Transactional(readOnly = true)
+    public List<NodeEntity> listarNosParaHeartbeat() {
+        return nodeRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
     public List<NodeEntity> listarTodos() {
         return nodeRepository.findAll();
     }
@@ -68,8 +84,14 @@ public class NodeRegistryService {
     @Transactional
     public void atualizarLider(String leaderId) {
         List<NodeEntity> nodes = nodeRepository.findAll();
+        LocalDateTime now = LocalDateTime.now();
         for (NodeEntity node : nodes) {
-            node.setLeader(node.getNodeId().equals(leaderId));
+            boolean isLeader = node.getNodeId().equals(leaderId);
+            node.setLeader(isLeader);
+            if (isLeader) {
+                node.setStatus(NodeStatus.ACTIVE);
+                node.setLastHeartbeatAt(now);
+            }
         }
         nodeRepository.saveAll(nodes);
     }
@@ -78,7 +100,16 @@ public class NodeRegistryService {
     public void marcarComoSuspeito(String nodeId) {
         nodeRepository.findByNodeId(nodeId).ifPresent(node -> {
             node.setLeader(Boolean.FALSE);
-            node.setStatus(NodeStatus.SUSPECT);
+            if (node.getStatus() == NodeStatus.INACTIVE) {
+                nodeRepository.save(node);
+                return;
+            }
+            LocalDateTime heartbeat = node.getLastHeartbeatAt();
+            long elapsedMs = heartbeat == null
+                ? Long.MAX_VALUE
+                : Duration.between(heartbeat, LocalDateTime.now()).toMillis();
+            long inactiveThresholdMs = heartbeatProperties.getTimeoutMs() * INACTIVE_TIMEOUT_MULTIPLIER;
+            node.setStatus(elapsedMs >= inactiveThresholdMs ? NodeStatus.INACTIVE : NodeStatus.SUSPECT);
             nodeRepository.save(node);
         });
     }

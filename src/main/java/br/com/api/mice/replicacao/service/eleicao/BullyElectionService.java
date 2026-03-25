@@ -27,8 +27,9 @@ public class BullyElectionService {
     private final AtomicReference<String> currentLeaderId = new AtomicReference<>();
 
     public synchronized String iniciarEleicao() {
+        currentLeaderId.set(null);
         NodeEntity noAtual = nodeRegistryService.obterNoAtual();
-        List<NodeEntity> nosSuperiores = nodeRegistryService.listarNosAtivos().stream()
+        List<NodeEntity> nosSuperiores = nodeRegistryService.listarNosDisponiveisParaContato().stream()
             .filter(node -> !node.getNodeId().equals(noAtual.getNodeId()))
             .filter(node -> compareNodeId(node.getNodeId(), noAtual.getNodeId()) > 0)
             .sorted(Comparator.comparing(NodeEntity::getNodeId))
@@ -70,6 +71,10 @@ public class BullyElectionService {
     public synchronized void definirCoordenador(CoordinatorMessageDTO coordinatorMessageDTO) {
         currentLeaderId.set(coordinatorMessageDTO.getLeaderId());
         nodeRegistryService.atualizarLider(coordinatorMessageDTO.getLeaderId());
+    }
+
+    public void limparLiderAtual() {
+        currentLeaderId.set(null);
     }
 
     public boolean isCurrentNodeLeader() {
@@ -132,7 +137,7 @@ public class BullyElectionService {
             .porta(nodeProperties.getPorta())
             .build();
 
-        for (NodeEntity node : nodeRegistryService.listarNosAtivos()) {
+        for (NodeEntity node : nodeRegistryService.listarNosDisponiveisParaContato()) {
             if (node.getNodeId().equals(nodeProperties.getId())) {
                 continue;
             }

@@ -9,7 +9,6 @@ import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -22,7 +21,6 @@ public class HeartbeatService {
     private final BullyElectionService bullyElectionService;
     private final org.springframework.web.client.RestClient.Builder restClientBuilder;
 
-    @Transactional
     public void enviarHeartbeatDoLider() {
         if (!bullyElectionService.isCurrentNodeLeader()) {
             return;
@@ -34,7 +32,7 @@ public class HeartbeatService {
             .timestamp(LocalDateTime.now())
             .build();
 
-        for (NodeEntity node : nodeRegistryService.listarNosAtivos()) {
+        for (NodeEntity node : nodeRegistryService.listarNosParaHeartbeat()) {
             if (node.getNodeId().equals(nodeProperties.getId())) {
                 continue;   
             }
@@ -53,12 +51,10 @@ public class HeartbeatService {
         }
     }
 
-    @Transactional
     public void processarHeartbeat(HeartbeatMessageDTO heartbeatMessageDTO) {
         nodeRegistryService.atualizarHeartbeat(heartbeatMessageDTO.getNodeId());
     }
 
-    @Transactional
     public void verificarTimeoutDoLider() {
         if (bullyElectionService.isCurrentNodeLeader()) {
             return;
@@ -73,6 +69,7 @@ public class HeartbeatService {
         long elapsedMs = Duration.between(lider.getLastHeartbeatAt(), LocalDateTime.now()).toMillis();
         if (elapsedMs > heartbeatProperties.getTimeoutMs()) {
             nodeRegistryService.marcarComoSuspeito(lider.getNodeId());
+            bullyElectionService.limparLiderAtual();
             bullyElectionService.iniciarEleicao();
         }
     }
