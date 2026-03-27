@@ -6,6 +6,9 @@ import br.com.api.mice.replicacao.dto.HeartbeatMessageDTO;
 import br.com.api.mice.replicacao.entity.NodeEntity;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
+
+import br.com.api.mice.replicacao.entity.enums.NodeStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -32,7 +35,7 @@ public class HeartbeatService {
             .timestamp(LocalDateTime.now())
             .build();
 
-        for (NodeEntity node : nodeRegistryService.listarNosParaHeartbeat()) {
+        for (NodeEntity node : nodeRegistryService.listNosDisponiveisByStatus(List.of(NodeStatus.ACTIVE, NodeStatus.SUSPECT))) {
             if (node.getNodeId().equals(nodeProperties.getId())) {
                 continue;   
             }

@@ -9,7 +9,6 @@ import br.com.api.mice.replicacao.repository.NodeRepository;
 import jakarta.annotation.PostConstruct;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.EnumSet;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -50,19 +49,9 @@ public class NodeRegistryService {
         return nodeRepository.save(node);
     }
 
-    @Transactional(readOnly = true)
-    public List<NodeEntity> listarNosAtivos() {
-        return nodeRepository.findByStatus(NodeStatus.ACTIVE);
-    }
-
-    @Transactional(readOnly = true)
-    public List<NodeEntity> listarNosDisponiveisParaContato() {
-        return nodeRepository.findByStatusIn(List.copyOf(EnumSet.of(NodeStatus.ACTIVE, NodeStatus.SUSPECT)));
-    }
-
-    @Transactional(readOnly = true)
-    public List<NodeEntity> listarNosParaHeartbeat() {
-        return nodeRepository.findAll();
+    @Transactional
+    public List<NodeEntity> listNosDisponiveisByStatus(List<NodeStatus> status) {
+        return nodeRepository.findByStatusIn(status);
     }
 
     @Transactional(readOnly = true)

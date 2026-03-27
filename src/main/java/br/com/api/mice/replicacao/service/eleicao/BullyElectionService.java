@@ -9,6 +9,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
+
+import br.com.api.mice.replicacao.entity.enums.NodeStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -29,11 +31,12 @@ public class BullyElectionService {
     public synchronized String iniciarEleicao() {
         currentLeaderId.set(null);
         NodeEntity noAtual = nodeRegistryService.obterNoAtual();
-        List<NodeEntity> nosSuperiores = nodeRegistryService.listarNosDisponiveisParaContato().stream()
-            .filter(node -> !node.getNodeId().equals(noAtual.getNodeId()))
-            .filter(node -> compareNodeId(node.getNodeId(), noAtual.getNodeId()) > 0)
-            .sorted(Comparator.comparing(NodeEntity::getNodeId))
-            .toList();
+        List<NodeEntity> nosSuperiores = nodeRegistryService.listNosDisponiveisByStatus(List.of(NodeStatus.ACTIVE, NodeStatus.SUSPECT))
+            .stream()
+                .filter(node -> !node.getNodeId().equals(noAtual.getNodeId()))
+                .filter(node -> compareNodeId(node.getNodeId(), noAtual.getNodeId()) > 0)
+                .sorted(Comparator.comparing(NodeEntity::getNodeId))
+                .toList();
 
         boolean algumNoSuperiorRespondeu = false;
         for (NodeEntity noSuperior : nosSuperiores) {
@@ -137,7 +140,7 @@ public class BullyElectionService {
             .porta(nodeProperties.getPorta())
             .build();
 
-        for (NodeEntity node : nodeRegistryService.listarNosDisponiveisParaContato()) {
+        for (NodeEntity node : nodeRegistryService.listNosDisponiveisByStatus(List.of(NodeStatus.ACTIVE, NodeStatus.SUSPECT))) {
             if (node.getNodeId().equals(nodeProperties.getId())) {
                 continue;
             }

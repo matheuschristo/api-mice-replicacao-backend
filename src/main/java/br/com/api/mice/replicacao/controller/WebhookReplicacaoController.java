@@ -59,7 +59,7 @@ public class WebhookReplicacaoController {
                     "eventId", eventoReplicacaoDTO.getEventId()
                 ));
         } catch (IllegalArgumentException | IllegalStateException exception) {
-            return ResponseEntity.unprocessableEntity()
+            return ResponseEntity.badRequest()
                 .body(Map.of(
                     "status", "error",
                     "message", exception.getMessage()

@@ -19,11 +19,6 @@ public class ReplicacaoLogService {
     private final ReplicacaoLogRepository replicacaoLogRepository;
 
     @Transactional
-    public void registrar(String entidade, ReplicacaoStatus status, int registrosProcessados, String mensagem) {
-        registrar(entidade, null, status, registrosProcessados, mensagem, LocalDateTime.now(), LocalDateTime.now());
-    }
-
-    @Transactional
     public void registrar(String entidade, String eventId, ReplicacaoStatus status, int registrosProcessados, String mensagem,
                           LocalDateTime executadoEm, LocalDateTime finalizadoEm) {
         replicacaoLogRepository.save(ReplicacaoLogEntity.builder()

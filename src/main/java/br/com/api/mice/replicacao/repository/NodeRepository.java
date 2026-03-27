@@ -12,7 +12,5 @@ public interface NodeRepository extends JpaRepository<NodeEntity, Long> {
 
     Optional<NodeEntity> findByLeaderTrue();
 
-    List<NodeEntity> findByStatus(NodeStatus status);
-
-    List<NodeEntity> findByStatusIn(List<NodeStatus> statuses);
+    List<NodeEntity> findByStatusIn(List<NodeStatus> status);
 }
