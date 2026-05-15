@@ -1,0 +1,11 @@
+.git
+.github
+.mvn
+src
+*.md
+docker-compose.rabbitmq.yml
+mvnw
+mvnw.cmd
+pom.xml
+target/*
+!target/*.jar

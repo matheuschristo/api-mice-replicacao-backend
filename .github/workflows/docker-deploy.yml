@@ -1,0 +1,77 @@
+name: Build, Test and Deploy Docker
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+env:
+  JAVA_VERSION: "17"
+  DISTRIBUTION: "temurin"
+  IMAGE_NAME: "api-mice-replicacao-backend"
+  CONTAINER_NAME: "api-mice-replicacao-backend"
+  APP_PORT: "8080"
+
+jobs:
+  build-test-image-deploy:
+    name: Build, test, image and deploy
+    runs-on: [self-hosted, Windows]
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: ${{ env.DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: "maven"
+
+      - name: Build
+        run: .\mvnw.cmd -B clean compile
+
+      - name: Test
+        run: .\mvnw.cmd -B test
+
+      - name: Package
+        run: .\mvnw.cmd -B package -DskipTests
+
+      - name: Generate Docker image
+        run: |
+          $tag = "${{ github.sha }}".Substring(0, 7)
+          docker build `
+            --tag "${{ env.IMAGE_NAME }}:$tag" `
+            --tag "${{ env.IMAGE_NAME }}:latest" `
+            .
+
+      - name: Deploy to Docker Desktop
+        if: github.event_name != 'pull_request'
+        run: |
+          $tag = "${{ github.sha }}".Substring(0, 7)
+          $containerId = docker ps -aq --filter "name=^/${{ env.CONTAINER_NAME }}$"
+
+          if ($containerId) {
+            docker rm -f "${{ env.CONTAINER_NAME }}"
+          }
+
+          docker run -d `
+            --name "${{ env.CONTAINER_NAME }}" `
+            --restart unless-stopped `
+            -p "${{ env.APP_PORT }}:${{ env.APP_PORT }}" `
+            -e NODE_PORTA="${{ env.APP_PORT }}" `
+            -e SPRING_DATASOURCE_URL="jdbc:postgresql://host.docker.internal:5432/api_mice_replicacao" `
+            -e SPRING_DATASOURCE_USERNAME="postgres" `
+            -e SPRING_DATASOURCE_PASSWORD="postgres" `
+            -e SPRING_RABBITMQ_HOST="host.docker.internal" `
+            -e SPRING_RABBITMQ_PORT="5672" `
+            "${{ env.IMAGE_NAME }}:$tag"
+
+      - name: Show running container
+        if: github.event_name != 'pull_request'
+        run: docker ps --filter "name=${{ env.CONTAINER_NAME }}"
